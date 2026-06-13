@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>🏖️ Saraillon — Séjour entre amies</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏖️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ===== Design tokens (contracts.md §6.1) ===== */
+  :root{
+    --sara-blue:#8EC5FF;
+    --sara-pink:#FFB8D9;
+    --sara-yellow:#FFE066;
+    --sara-green:#A0E8C0;
+    --sara-purple:#C7B8FF;
+    --sara-orange:#FFC59E;
+    --sara-ink:#2B2D42;
+    --sara-paper:#FFF7FB;
+    --pixel:'Press Start 2P', system-ui, sans-serif;   /* titres / labels (parcimonie) */
+    --body:'Baloo 2', system-ui, sans-serif;            /* corps */
+    --shadow:4px 4px 0 var(--sara-ink);                 /* ombre dure, sans flou */
+    --shadow-sm:3px 3px 0 var(--sara-ink);
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--body);
+    color:var(--sara-ink);
+    /* fond pastel multicolore derrière le "téléphone" */
+    background:
+      radial-gradient(circle at 18% 12%, rgba(199,184,255,.55), transparent 42%),
+      radial-gradient(circle at 85% 22%, rgba(142,197,255,.55), transparent 45%),
+      radial-gradient(circle at 80% 88%, rgba(255,184,217,.55), transparent 45%),
+      radial-gradient(circle at 12% 85%, rgba(160,232,192,.5), transparent 45%),
+      #f3e9ff;
+    min-height:100dvh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ===== Cadre "téléphone" ===== */
+  .phone{
+    position:relative;
+    width:min(430px,100%);
+    height:100dvh;
+    background:var(--sara-paper);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  @media(min-width:520px){
+    .phone{
+      height:min(900px,94vh);
+      border:4px solid var(--sara-ink);
+      border-radius:34px;
+      box-shadow:12px 12px 0 var(--sara-ink);
+    }
+  }
+
+  /* ===== En-tête rétro (RetroHeader) ===== */
+  .topbar{
+    flex:0 0 auto;
+    padding:14px 16px 12px;
+    background:linear-gradient(135deg, var(--sara-blue), var(--sara-pink));
+    border-bottom:3px solid var(--sara-ink);
+  }
+  .brand{
+    font-family:var(--pixel);
+    font-size:15px;
+    letter-spacing:.5px;
+    text-shadow:2px 2px 0 #fff;
+    display:flex;align-items:center;gap:8px;
+  }
+  .tagline{font-size:14px;font-weight:600;margin-top:6px;opacity:.85}
+  .avatars{display:flex;gap:6px;margin-top:10px}
+  .avatar{
+    width:30px;height:30px;border-radius:50%;
+    border:2px solid var(--sara-ink);
+    display:grid;place-items:center;
+    font-family:var(--pixel);font-size:9px;
+    box-shadow:2px 2px 0 var(--sara-ink);
+    background:#fff;cursor:default;
+  }
+
+  /* ===== Zone de contenu scrollable ===== */
+  .content{
+    flex:1 1 auto;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:16px 14px 22px;
+  }
+  .screen{display:none;animation:pop .25s ease}
+  .screen.active{display:block}
+  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .screen-title{
+    font-family:var(--pixel);
+    font-size:13px;line-height:1.5;
+    margin:2px 0 14px;
+  }
+  .subtle{font-size:13px;font-weight:600;opacity:.7}
+
+  /* ===== Carte (contracts.md §6.3) ===== */
+  .card{
+    background:#fff;
+    border:3px solid var(--sara-ink);
+    border-radius:16px;
+    box-shadow:var(--shadow);
+    padding:14px;
+    margin-bottom:14px;
+  }
+  .card.tap{cursor:pointer;transition:transform .06s, box-shadow .06s}
+  .card.tap:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--sara-ink)}
+
+  /* ===== Bouton 8-bit ===== */
+  .btn{
+    font-family:var(--body);
+    font-weight:800;font-size:16px;
+    color:var(--sara-ink);
+    background:var(--sara-yellow);
+    border:3px solid var(--sara-ink);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    padding:12px 16px;
+    min-height:48px;
+    cursor:pointer;
+    transition:transform .06s, box-shadow .06s;
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;
+  }
+  .btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--sara-ink)}
+  .btn.blue{background:var(--sara-blue)}
+  .btn.pink{background:var(--sara-pink)}
+  .btn.green{background:var(--sara-green)}
+  .btn.purple{background:var(--sara-purple)}
+  .btn.small{width:auto;font-size:14px;padding:9px 13px;min-height:40px}
+
+  /* ===== Champ de saisie ===== */
+  .input{
+    width:100%;
+    font-family:var(--body);font-weight:600;font-size:15px;
+    color:var(--sara-ink);
+    background:#fff;
+    border:3px solid var(--sara-ink);
+    border-radius:14px;
+    box-shadow:var(--shadow-sm);
+    padding:12px 14px;
+    outline:none;
+  }
+  .input::placeholder{color:#9a9ab0}
+  .input:focus{background:#fffdf6}
+
+  /* ===== Badges / puces ===== */
+  .badge{
+    display:inline-block;
+    font-family:var(--pixel);font-size:8px;
+    padding:5px 8px;border-radius:8px;
+    border:2px solid var(--sara-ink);
+    box-shadow:2px 2px 0 var(--sara-ink);
+  }
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;
+    font-weight:700;font-size:13px;
+    padding:4px 10px;border-radius:999px;
+    border:2px solid var(--sara-ink);
+    background:var(--sara-paper);
+    margin:3px 4px 3px 0;
+  }
+  .tag-insc{background:var(--sara-orange)}
+
+  /* couleurs de jour */
+  .d-Vendredi{background:var(--sara-purple)}
+  .d-Samedi{background:var(--sara-blue)}
+  .d-Dimanche{background:var(--sara-pink)}
+  .d-Lundi{background:var(--sara-green)}
+  .d-Mardi{background:var(--sara-yellow)}
+  .d-Mercredi{background:var(--sara-orange)}
+  .d-Jeudi{background:var(--sara-blue)}
+
+  /* ===== Carte activité (Planning) ===== */
+  .act-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .act-name{font-size:19px;font-weight:800;line-height:1.2;margin:2px 0 6px}
+  .act-time{font-weight:600;display:flex;align-items:center;gap:6px}
+  .act-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+  .chevron{font-family:var(--pixel);font-size:14px}
+
+  /* ===== Détail Planning ===== */
+  .back{
+    font-family:var(--body);font-weight:800;font-size:14px;
+    background:#fff;border:3px solid var(--sara-ink);border-radius:12px;
+    box-shadow:var(--shadow-sm);padding:8px 12px;cursor:pointer;margin-bottom:12px;
+  }
+  .back:active{transform:translate(3px,3px);box-shadow:0 0 0}
+  .sec{margin:14px 0 0}
+  .sec h3{
+    font-family:var(--pixel);font-size:10px;margin:0 0 8px;
+    display:flex;align-items:center;gap:7px;
+  }
+  .sec p{margin:0;font-weight:600;font-size:15px}
+  .check{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 11px;margin:7px 0;
+    background:var(--sara-paper);
+    border:2px solid var(--sara-ink);border-radius:11px;cursor:pointer;
+    font-weight:600;
+  }
+  .check .box{
+    width:22px;height:22px;flex:0 0 auto;
+    border:2px solid var(--sara-ink);border-radius:6px;background:#fff;
+    display:grid;place-items:center;font-size:14px;
+  }
+  .check.on{background:var(--sara-green)}
+  .check.on .box::after{content:'✔'}
+  .check.on .lbl{text-decoration:line-through;opacity:.65}
+  .prevoir{display:flex;gap:9px;align-items:flex-start;font-weight:600;margin:6px 0}
+
+  /* ===== Segmented control (Jeux) ===== */
+  .seg{display:flex;gap:8px;margin-bottom:16px}
+  .seg button{
+    flex:1;font-family:var(--body);font-weight:800;font-size:14px;
+    padding:11px 6px;border:3px solid var(--sara-ink);border-radius:12px;
+    background:#fff;cursor:pointer;box-shadow:var(--shadow-sm);
+  }
+  .seg button.on{background:var(--sara-yellow);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--sara-ink)}
+  .subscreen{display:none}
+  .subscreen.active{display:block}
+
+  .result{
+    text-align:center;padding:22px 16px;margin-top:14px;
+    border:3px dashed var(--sara-ink);border-radius:16px;background:var(--sara-paper);
+    min-height:120px;display:flex;flex-direction:column;justify-content:center;gap:8px;
+  }
+  .result.filled{border-style:solid;background:#fff;box-shadow:var(--shadow);animation:zoom .3s ease}
+  @keyframes zoom{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+  .result .big{font-size:21px;font-weight:800;line-height:1.3}
+  .result .loto-name{font-family:var(--pixel);font-size:16px;color:var(--sara-ink);margin-top:4px}
+  .placeholder-emoji{font-size:42px}
+
+  /* ===== Repas ===== */
+  .diet{
+    background:var(--sara-green);
+    border:3px solid var(--sara-ink);border-radius:14px;box-shadow:var(--shadow);
+    padding:12px 14px;margin-bottom:16px;font-weight:700;
+    display:flex;gap:14px;flex-wrap:wrap;align-items:center;
+  }
+  .meal-row{display:flex;align-items:center;gap:8px;font-weight:600;margin:5px 0}
+  .courses-add{display:flex;gap:8px;margin:10px 0 14px}
+  .courses-add .input{flex:1}
+
+  /* ===== Galerie ===== */
+  .deezer-wrap{border:3px solid var(--sara-ink);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);background:#fff}
+  .deezer-wrap iframe{display:block;width:100%;border:0}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .tile{
+    aspect-ratio:1;border:3px solid var(--sara-ink);border-radius:12px;
+    box-shadow:var(--shadow-sm);display:grid;place-items:center;font-size:30px;
+  }
+  .tile.add{cursor:pointer;background:var(--sara-paper);font-size:26px;flex-direction:column;font-weight:800}
+  .tile.add:active{transform:translate(3px,3px);box-shadow:0 0 0}
+  .tile.add small{font-family:var(--pixel);font-size:7px;margin-top:6px;text-align:center}
+
+  /* ===== Surprises ===== */
+  .secret-row{display:flex;gap:8px;margin:14px 0}
+  .secret-row .input{flex:1;font-family:var(--pixel);font-size:12px;text-transform:uppercase}
+  .media-box{
+    aspect-ratio:16/9;border:3px solid var(--sara-ink);border-radius:12px;
+    background:linear-gradient(135deg,var(--sara-purple),var(--sara-blue));
+    display:grid;place-items:center;margin-top:12px;
+  }
+  .media-box.audio{aspect-ratio:auto;padding:24px 14px;background:linear-gradient(135deg,var(--sara-pink),var(--sara-orange))}
+  .play{
+    width:62px;height:62px;border-radius:50%;background:#fff;
+    border:3px solid var(--sara-ink);box-shadow:var(--shadow);
+    display:grid;place-items:center;font-size:26px;
+  }
+  .bars{display:flex;gap:5px;align-items:flex-end;height:42px;justify-content:center}
+  .bars span{width:7px;background:var(--sara-ink);border-radius:3px;animation:eq 1s ease-in-out infinite}
+  .bars span:nth-child(2){animation-delay:.15s}
+  .bars span:nth-child(3){animation-delay:.3s}
+  .bars span:nth-child(4){animation-delay:.45s}
+  .bars span:nth-child(5){animation-delay:.6s}
+  @keyframes eq{0%,100%{height:14px}50%{height:42px}}
+  .shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+
+  /* ===== Loader rétro ===== */
+  .loader{display:flex;gap:6px;justify-content:center;padding:8px}
+  .loader span{
+    width:14px;height:14px;background:var(--sara-ink);
+    animation:blink .8s infinite steps(1);
+  }
+  .loader span:nth-child(2){animation-delay:.2s}
+  .loader span:nth-child(3){animation-delay:.4s}
+  .loader span:nth-child(4){animation-delay:.6s}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:.2}}
+
+  /* ===== États ===== */
+  .empty{text-align:center;font-weight:700;font-size:17px;padding:30px 10px;line-height:1.7;opacity:.8}
+  .empty .e{font-size:40px;display:block;margin-bottom:8px}
+  .note{font-size:12.5px;font-weight:600;opacity:.7;margin-top:10px;line-height:1.5}
+  .hidden{display:none !important}
+
+  /* ===== Bottom nav (5 onglets) ===== */
+  .bottomnav{
+    flex:0 0 auto;
+    display:flex;
+    background:var(--sara-paper);
+    border-top:3px solid var(--sara-ink);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .nav-btn{
+    flex:1;border:0;background:transparent;cursor:pointer;
+    padding:9px 2px 8px;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    border-right:2px solid rgba(43,45,66,.12);
+    transition:background .12s;
+    min-height:56px;
+  }
+  .nav-btn:last-child{border-right:0}
+  .nav-btn .ico{font-size:21px;line-height:1}
+  .nav-btn .lab{font-family:var(--pixel);font-size:7px;letter-spacing:0}
+  .nav-btn.active{border-top:3px solid var(--sara-ink);margin-top:-3px}
+  .nav-btn.active[data-screen="planning"]{background:var(--sara-blue)}
+  .nav-btn.active[data-screen="jeux"]{background:var(--sara-yellow)}
+  .nav-btn.active[data-screen="repas"]{background:var(--sara-green)}
+  .nav-btn.active[data-screen="galerie"]{background:var(--sara-purple)}
+  .nav-btn.active[data-screen="surprises"]{background:var(--sara-pink)}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- ===== En-tête ===== -->
+  <header class="topbar">
+    <div class="brand">🏖️ SARAILLON</div>
+    <div class="tagline">Séjour entre amies 🌴 2026</div>
+    <div class="avatars" id="avatars"></div>
+  </header>
+
+  <!-- ===== Contenu ===== -->
+  <main class="content">
+
+    <!-- 1 · PLANNING -->
+    <section id="screen-planning" class="screen active">
+      <div id="planning-list">
+        <h2 class="screen-title">📅 Planning</h2>
+        <input id="filter" class="input" placeholder="🔎 Filtrer (activité, jour, lieu…)" autocomplete="off">
+        <div id="planning-cards" style="margin-top:14px"></div>
+        <div id="planning-empty" class="empty hidden"><span class="e">🕳️</span>Aucune activité ne correspond…<br>essaie un autre mot !</div>
+      </div>
+      <div id="planning-detail" class="hidden"></div>
+    </section>
+
+    <!-- 2 · JEUX & DÉFIS -->
+    <section id="screen-jeux" class="screen">
+      <h2 class="screen-title">🎲 Jeux &amp; Défis</h2>
+      <div class="seg">
+        <button id="seg-defi" class="on" onclick="switchJeux('defi')">🔥 Défi du jour</button>
+        <button id="seg-loto" onclick="switchJeux('loto')">🧹 Loto corvées</button>
+      </div>
+
+      <div id="sub-defi" class="subscreen active">
+        <p class="subtle">Appuie pour tirer un défi au hasard 👇</p>
+        <button class="btn" onclick="drawDefi()">🎰 Nouveau défi</button>
+        <div id="defi-result" class="result"><span class="placeholder-emoji">🔥</span><div class="subtle">Ton défi apparaîtra ici</div></div>
+      </div>
+
+      <div id="sub-loto" class="subscreen">
+        <p class="subtle">Qui s'y colle&nbsp;? Le sort décide 👇</p>
+        <button class="btn green" onclick="drawLoto()">🎲 Tirer une corvée</button>
+        <div id="loto-result" class="result"><span class="placeholder-emoji">🧹</span><div class="subtle">La corvée &amp; l'élue s'afficheront ici</div></div>
+      </div>
+    </section>
+
+    <!-- 3 · REPAS & COURSES -->
+    <section id="screen-repas" class="screen">
+      <h2 class="screen-title">🍽️ Repas &amp; Courses</h2>
+      <div class="diet">
+        <span>🥗 3 végétariennes</span>
+        <span>🥓🚫 2 sans porc</span>
+      </div>
+      <h3 class="sec"><span style="font-family:var(--pixel);font-size:11px">📋 Les repas</span></h3>
+      <div id="meals"></div>
+
+      <h3 class="sec" style="margin-top:20px"><span style="font-family:var(--pixel);font-size:11px">🛒 Liste de courses</span></h3>
+      <div class="courses-add">
+        <input id="course-input" class="input" placeholder="Ajouter un article…" autocomplete="off"
+               onkeydown="if(event.key==='Enter')addCourse()">
+        <button class="btn pink small" onclick="addCourse()">＋</button>
+      </div>
+      <div id="courses"></div>
+      <p class="note">🔒 Démo locale — dans la vraie app, la liste sera partagée en temps réel entre les 5 copines.</p>
+    </section>
+
+    <!-- 4 · GALERIE & MÉDIAS -->
+    <section id="screen-galerie" class="screen">
+      <h2 class="screen-title">📸 Galerie</h2>
+      <h3 class="sec"><span style="font-family:var(--pixel);font-size:11px">🎶 Notre playlist</span></h3>
+      <div class="deezer-wrap">
+        <iframe title="Playlist Deezer Saraillon"
+          src="https://widget.deezer.com/widget/light/playlist/15298797043"
+          width="100%" height="300" frameborder="0" allowtransparency="true"
+          allow="encrypted-media; clipboard-write"></iframe>
+      </div>
+
+      <h3 class="sec" style="margin-top:20px"><span style="font-family:var(--pixel);font-size:11px">📷 Photos</span></h3>
+      <div class="grid" id="gallery"></div>
+      <p class="note">🔒 Démo — l'upload réel ira dans Supabase Storage (galerie partagée).</p>
+    </section>
+
+    <!-- 5 · SURPRISES -->
+    <section id="screen-surprises" class="screen">
+      <h2 class="screen-title">🎁 Surprises</h2>
+      <div class="card">
+        <p style="font-weight:700;font-size:16px;margin:0 0 4px">Tu as un code secret&nbsp;? 🤫</p>
+        <p class="subtle" style="margin:0">Saisis-le pour déverrouiller une surprise.</p>
+        <div class="secret-row">
+          <input id="secret-input" class="input" placeholder="CODE…" autocomplete="off"
+                 onkeydown="if(event.key==='Enter')reveal()">
+          <button class="btn purple small" onclick="reveal()">✨ Révéler</button>
+        </div>
+        <div id="secret-result"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== Bottom nav ===== -->
+  <nav class="bottomnav">
+    <button class="nav-btn active" data-screen="planning"  onclick="go('planning')"><span class="ico">📅</span><span class="lab">PLANNING</span></button>
+    <button class="nav-btn"        data-screen="jeux"      onclick="go('jeux')"><span class="ico">🎲</span><span class="lab">JEUX</span></button>
+    <button class="nav-btn"        data-screen="repas"     onclick="go('repas')"><span class="ico">🍽️</span><span class="lab">REPAS</span></button>
+    <button class="nav-btn"        data-screen="galerie"   onclick="go('galerie')"><span class="ico">📸</span><span class="lab">GALERIE</span></button>
+    <button class="nav-btn"        data-screen="surprises" onclick="go('surprises')"><span class="ico">🎁</span><span class="lab">SURPRISES</span></button>
+  </nav>
+</div>
+
+<script>
+/* =========================================================================
+   DONNÉES RÉELLES — extraites de seed/ (en dur : c'est une maquette)
+   Noms de champs alignés sur contracts.md §3.
+   ========================================================================= */
+
+// §3.1 programme — feuille « Programme » (14 activités)
+const PROGRAMME = [
+  {ordre:1, jour:"Vendredi", activite:"Apéro au Mourillon", horaires:"22h00",
+   lieu_details:"Mourillon – Oasis ou La Source", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"Dîner (apéro dînatoire)", responsables:"À définir", petit_dejeuner:"Non",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"–",
+   eau_snacks:"Non", creme_chapeau:"Non", medicaments:"Non"},
+  {ordre:2, jour:"Samedi", activite:"Aéroport + Calanques + Soirée Friche", horaires:"09h30 – tard",
+   lieu_details:"Marseille : Calanques, puis Friche (ascenseur en panne). Soirée Constellations", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"Déjeuner (pic nic) + Dîner (sur place)", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"Maillot de bain, serviette, tenue de rechange",
+   eau_snacks:"Oui (gourde, fruits secs)", creme_chapeau:"Oui (crème, chapeau, lunettes)", medicaments:"Oui (petite trousse : pansements, mal de tête)"},
+  {ordre:3, jour:"Dimanche", activite:"Surprises", horaires:"10h30 – 00h00",
+   lieu_details:"Lieu secret", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"Déjeuner + Dîner", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"–",
+   eau_snacks:"Non", creme_chapeau:"Non", medicaments:"Non"},
+  {ordre:4, jour:"Lundi", activite:"Plongée", horaires:"À définir",
+   lieu_details:"Excursion sur inscription", inscription_requise:true, lien_inscription:"https://forms.gle/PMACZkefBwXW4EYf6",
+   repas_concerne:"Déjeuner (panier repas)", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"Masque, tuba, palmes (si non fournis), serviette, crème waterproof",
+   eau_snacks:"Oui (gourde, encas)", creme_chapeau:"Oui (crème solaire waterproof, chapeau)", medicaments:"Oui (pastilles contre mal de mer, pansements)"},
+  {ordre:5, jour:"Mardi", activite:"Balade en bateau", horaires:"Matin",
+   lieu_details:"Excursion sur inscription", inscription_requise:true, lien_inscription:"https://forms.gle/7F35tvEUbPNTLvh5A",
+   repas_concerne:"Déjeuner (repas sur le bateau)", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"Vêtement coupe-vent, casquette, crème solaire",
+   eau_snacks:"Oui (eau, encas)", creme_chapeau:"Oui (crème, chapeau, lunettes de soleil)", medicaments:"Oui (pastilles mal de mer)"},
+  {ordre:6, jour:"Mardi", activite:"Répartition des équipes pour les show", horaires:"13h00 – 14h00",
+   lieu_details:"Les équipes se choisissent", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"–", responsables:"–", petit_dejeuner:"–",
+   regimes_allergies:"–", materiel_collectif:"–", materiel_individuel:"–",
+   eau_snacks:"Non", creme_chapeau:"Non", medicaments:"Non"},
+  {ordre:7, jour:"Mercredi", activite:"Stand-up paddle", horaires:"Journée",
+   lieu_details:"Anse Méjean", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"Déjeuner (pic nic plage)", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"Maillot, serviette, chaussons d’eau (optionnel), crème solaire",
+   eau_snacks:"Oui (gourde, encas)", creme_chapeau:"Oui (crème, chapeau, lunettes)", medicaments:"Oui (pansements, désinfectant)"},
+  {ordre:8, jour:"Jeudi", activite:"Via Ferrata", horaires:"Matin",
+   lieu_details:"Excursion sur inscription", inscription_requise:true, lien_inscription:"https://forms.gle/TjtfUzamMA5pKdfv9",
+   repas_concerne:"Déjeuner (après)", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"Casque (souvent fourni)", materiel_individuel:"Gants, chaussures fermées, gourde, tenue de sport",
+   eau_snacks:"Oui (gourde, barre céréale)", creme_chapeau:"Oui (crème, chapeau)", medicaments:"Oui (pansements, bandes)"},
+  {ordre:9, jour:"Jeudi", activite:"Show your Talent (répétitions)", horaires:"Après-midi",
+   lieu_details:"Lieu : Saraillon", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"–", responsables:"–", petit_dejeuner:"–",
+   regimes_allergies:"–", materiel_collectif:"Micro, ordinateur, adaptateur HDMI, enceinte (collectif)", materiel_individuel:"Chacune son support (PPT, musique, etc.)",
+   eau_snacks:"Non", creme_chapeau:"Non", medicaments:"Non"},
+  {ordre:10, jour:"Jeudi", activite:"Show your Talent (spectacle)", horaires:"21h00",
+   lieu_details:"Lieu : Saraillon", inscription_requise:true, lien_inscription:"https://forms.gle/jvniS5qg6ksmjaZ6A",
+   repas_concerne:"Dîner (avant le show)", responsables:"À définir", petit_dejeuner:"Non",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"Micro, ordinateur, HDMI, enceinte", materiel_individuel:"Tenue de scène (selon idée)",
+   eau_snacks:"Non", creme_chapeau:"Non", medicaments:"Non"},
+  {ordre:11, jour:"Vendredi", activite:"Ateliers des invités", horaires:"10h30 – 18h00",
+   lieu_details:"Lieu : Saraillon", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"Déjeuner + Dîner (avant réveillon)", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"(selon atelier)", materiel_individuel:"Matériel spécifique selon atelier",
+   eau_snacks:"Non", creme_chapeau:"Non", medicaments:"Non"},
+  {ordre:12, jour:"Vendredi", activite:"Réveillon", horaires:"21h00",
+   lieu_details:"Saraillon – lettres et cadeaux", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"Dîner de fête", responsables:"À définir", petit_dejeuner:"Non",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"–",
+   eau_snacks:"Non", creme_chapeau:"Non", medicaments:"Non"},
+  {ordre:13, jour:"Samedi", activite:"Piscine + Soirée de clôture", horaires:"Journée + soirée",
+   lieu_details:"Piscine", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"Déjeuner (léger) + Dîner (clôture)", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"Maillot, serviette, crème solaire",
+   eau_snacks:"Oui (eau, fruits)", creme_chapeau:"Oui (crème, chapeau)", medicaments:"Non"},
+  {ordre:14, jour:"Dimanche", activite:"Départ", horaires:"Matin",
+   lieu_details:"Aéroport / gare", inscription_requise:false, lien_inscription:null,
+   repas_concerne:"Petit-déjeuner", responsables:"À définir", petit_dejeuner:"Oui",
+   regimes_allergies:"3 végé, 2 sans porc", materiel_collectif:"–", materiel_individuel:"–",
+   eau_snacks:"Non", creme_chapeau:"Non", medicaments:"Non"}
+];
+
+// §3.3 defis — feuille « Défis »
+const DEFIS = [
+  "Raconte notre pire souvenir de vacances",
+  "Montre une photo embarrassante de toi (mais mignonne)",
+  "Rends un service à la dernière personne avec qui tu as parlé"
+];
+
+// §3.4 equipe — feuille « Équipe »
+const EQUIPE = ["Chunfei", "Mathilde", "Nawaelle", "Sonia", "Inès"];
+
+// §3.5 corvees — feuille « Corvées »
+const CORVEES = [
+  "Sortir les poubelles le soir devant la grille",
+  "Préparer le café du midi",
+  "Passer l’aspirateur après le repas dans la cuisine",
+  "Faire les courses",
+  "Préparer le petit-déjeuner",
+  "Préparer le déjeuner",
+  "Préparer le dîner",
+  "Rentrer les poubelles le matin"
+];
+
+// §3.6 messages_caches — feuille « MessagesCaches »
+// (URLs réelles non fournies → placeholders propres, cf. spec « Manques connus »)
+const MESSAGES_CACHES = [
+  {code:"VACANCES2026", type:"video", contenu_url:null, message:"La vidéo surprise n’est pas encore en ligne 🎬"},
+  {code:"SHOWTIME",     type:"audio", contenu_url:null, message:"Le message audio n’est pas encore en ligne 🎧"}
+];
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+const $  = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const esc = s => String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isEmpty = v => { const t=String(v??'').trim(); return t===''||t==='–'||t==='-'||/^non$/i.test(t); };
+const rnd = arr => arr[Math.floor(Math.random()*arr.length)];
+
+// découpe une liste "a, b (x, y), c" en items en respectant les parenthèses
+function splitItems(s){
+  if(isEmpty(s)) return [];
+  const out=[]; let depth=0, cur='';
+  for(const ch of String(s)){
+    if(ch==='(') depth++;
+    else if(ch===')') depth=Math.max(0,depth-1);
+    if(ch===',' && depth===0){ out.push(cur.trim()); cur=''; }
+    else cur+=ch;
+  }
+  if(cur.trim()) out.push(cur.trim());
+  return out.filter(Boolean);
+}
+
+/* =========================================================================
+   NAVIGATION (5 onglets)
+   ========================================================================= */
+function go(screen){
+  $$('.screen').forEach(s=>s.classList.toggle('active', s.id==='screen-'+screen));
+  $$('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.screen===screen));
+  if(screen==='planning') closeDetail();      // toujours revenir à la liste
+  $('.content').scrollTop = 0;
+}
+
+/* =========================================================================
+   1 · PLANNING
+   ========================================================================= */
+function renderPlanning(filter=''){
+  const q = filter.trim().toLowerCase();
+  const list = PROGRAMME.filter(p =>
+    !q || (p.jour+' '+p.activite+' '+p.lieu_details+' '+p.horaires).toLowerCase().includes(q));
+  $('#planning-empty').classList.toggle('hidden', list.length>0);
+  $('#planning-cards').innerHTML = list.map(p => `
+    <div class="card tap" onclick="openDetail(${p.ordre})">
+      <div class="act-top">
+        <span class="badge d-${esc(p.jour)}">${esc(p.jour)}</span>
+        ${p.inscription_requise ? '<span class="badge tag-insc">✍️ INSCR.</span>' : ''}
+      </div>
+      <div class="act-name">${esc(p.activite)}</div>
+      <div class="act-foot">
+        <span class="act-time">⏰ ${esc(p.horaires)}</span>
+        <span class="chevron">›</span>
+      </div>
+    </div>`).join('');
+}
+
+function openDetail(ordre){
+  const p = PROGRAMME.find(x=>x.ordre===ordre);
+  if(!p) return;
+  const matInd = splitItems(p.materiel_individuel);
+  const matCol = splitItems(p.materiel_collectif);
+  const checklist = (title, icon, items) => items.length ? `
+    <div class="sec">
+      <h3>${icon} ${title}</h3>
+      ${items.map(it=>`
+        <label class="check" onclick="this.classList.toggle('on')">
+          <span class="box"></span><span class="lbl">${esc(it)}</span>
+        </label>`).join('')}
+    </div>` : '';
+
+  const prevoir = [
+    !isEmpty(p.eau_snacks)   ? `<div class="prevoir">💧 <span>${esc(p.eau_snacks)}</span></div>`   : '',
+    !isEmpty(p.creme_chapeau)? `<div class="prevoir">☀️ <span>${esc(p.creme_chapeau)}</span></div>`: '',
+    !isEmpty(p.medicaments)  ? `<div class="prevoir">💊 <span>${esc(p.medicaments)}</span></div>`  : ''
+  ].join('');
+
+  $('#planning-detail').innerHTML = `
+    <button class="back" onclick="closeDetail()">‹ Retour</button>
+    <div class="act-top">
+      <span class="badge d-${esc(p.jour)}">${esc(p.jour)}</span>
+      <span class="chip">⏰ ${esc(p.horaires)}</span>
+    </div>
+    <h2 style="font-size:24px;font-weight:800;margin:6px 0 4px;line-height:1.15">${esc(p.activite)}</h2>
+
+    <div class="sec"><h3>📍 Lieu</h3><p>${esc(p.lieu_details)}</p></div>
+
+    ${!isEmpty(p.repas_concerne) ? `<div class="sec"><h3>🍽️ Repas concerné</h3><p>${esc(p.repas_concerne)}</p></div>` : ''}
+
+    <div class="sec">
+      <h3>✍️ Inscription</h3>
+      ${p.inscription_requise && p.lien_inscription
+        ? `<a class="btn orange" style="background:var(--sara-orange);text-decoration:none" href="${esc(p.lien_inscription)}" target="_blank" rel="noopener">📝 Je m’inscris</a>`
+        : `<p>Pas d’inscription requise ✅</p>`}
+    </div>
+
+    ${checklist('Matériel individuel','🎒', matInd)}
+    ${checklist('Matériel collectif','🧰', matCol)}
+
+    ${prevoir ? `<div class="sec"><h3>🧴 À prévoir aussi</h3>${prevoir}</div>` : ''}
+
+    ${!isEmpty(p.regimes_allergies) ? `<div class="sec"><h3>🥗 Régimes / allergies</h3><span class="chip">${esc(p.regimes_allergies)}</span></div>` : ''}
+  `;
+  $('#planning-list').classList.add('hidden');
+  $('#planning-detail').classList.remove('hidden');
+  $('.content').scrollTop = 0;
+}
+function closeDetail(){
+  $('#planning-detail').classList.add('hidden');
+  $('#planning-list').classList.remove('hidden');
+}
+
+/* =========================================================================
+   2 · JEUX & DÉFIS
+   ========================================================================= */
+function switchJeux(which){
+  $('#seg-defi').classList.toggle('on', which==='defi');
+  $('#seg-loto').classList.toggle('on', which==='loto');
+  $('#sub-defi').classList.toggle('active', which==='defi');
+  $('#sub-loto').classList.toggle('active', which==='loto');
+}
+function drawDefi(){
+  const d = rnd(DEFIS);
+  $('#defi-result').className = 'result filled';
+  $('#defi-result').innerHTML = `<span class="placeholder-emoji">🔥</span><div class="big">${esc(d)}</div>`;
+}
+function drawLoto(){
+  const tache = rnd(CORVEES);
+  const qui   = rnd(EQUIPE);
+  $('#loto-result').className = 'result filled';
+  $('#loto-result').innerHTML =
+    `<span class="placeholder-emoji">🧹</span><div class="big">${esc(tache)}</div>
+     <div class="subtle">c’est pour…</div><div class="loto-name">👑 ${esc(qui)}</div>`;
+}
+
+/* =========================================================================
+   3 · REPAS & COURSES
+   ========================================================================= */
+function renderMeals(){
+  const meals = PROGRAMME.filter(p=>!isEmpty(p.repas_concerne));
+  $('#meals').innerHTML = meals.map(p=>`
+    <div class="card">
+      <div class="act-top">
+        <span class="badge d-${esc(p.jour)}">${esc(p.jour)}</span>
+        ${/^oui$/i.test(p.petit_dejeuner)?'<span class="chip">🥐 Petit-déj</span>':''}
+      </div>
+      <div class="meal-row">🍽️ <strong>${esc(p.repas_concerne)}</strong></div>
+      <div class="meal-row subtle">👩‍🍳 Responsable(s) : ${esc(p.responsables)}</div>
+    </div>`).join('');
+}
+
+let COURSES = [
+  {libelle:"Pain & viennoiseries", checked:false},
+  {libelle:"Fruits & légumes de saison", checked:false},
+  {libelle:"Pâtes / riz (option végé)", checked:true},
+  {libelle:"Boissons & eau", checked:false},
+  {libelle:"Crème solaire (rab)", checked:false}
+];
+function renderCourses(){
+  $('#courses').innerHTML = COURSES.map((c,i)=>`
+    <label class="check ${c.checked?'on':''}" onclick="toggleCourse(${i})">
+      <span class="box"></span><span class="lbl">${esc(c.libelle)}</span>
+    </label>`).join('');
+}
+function toggleCourse(i){ COURSES[i].checked=!COURSES[i].checked; renderCourses(); }
+function addCourse(){
+  const inp = $('#course-input'); const v = inp.value.trim();
+  if(!v) return;
+  COURSES.push({libelle:v, checked:false});
+  inp.value=''; renderCourses(); inp.focus();
+}
+
+/* =========================================================================
+   4 · GALERIE
+   ========================================================================= */
+const PHOTO_EMOJIS = ['🏖️','🌊','🤿','🛶','🧗‍♀️','🎤','🎉','🍝','🌅','📸','🥂','🏊‍♀️'];
+let gallery = ['🏖️','🌊','🤿','🛶','🧗‍♀️'];
+const tileColors = ['var(--sara-blue)','var(--sara-pink)','var(--sara-yellow)','var(--sara-green)','var(--sara-purple)','var(--sara-orange)'];
+function renderGallery(){
+  const tiles = gallery.map((e,i)=>`<div class="tile" style="background:${tileColors[i%tileColors.length]}">${e}</div>`).join('');
+  $('#gallery').innerHTML = tiles +
+    `<div class="tile add" onclick="addPhoto()">＋<small>AJOUTER<br>UNE PHOTO</small></div>`;
+}
+function addPhoto(){
+  gallery.push(rnd(PHOTO_EMOJIS));
+  renderGallery();
+}
+
+/* =========================================================================
+   5 · SURPRISES
+   ========================================================================= */
+function reveal(){
+  const code = $('#secret-input').value.trim().toUpperCase().replace(/\s+/g,'');
+  const box  = $('#secret-result');
+  box.classList.remove('shake');
+  box.innerHTML = `<div class="loader" style="margin-top:14px"><span></span><span></span><span></span><span></span></div>`;
+  setTimeout(()=>{
+    const hit = MESSAGES_CACHES.find(m=>m.code===code);
+    if(!hit){
+      box.innerHTML = `<div class="result filled" style="border-color:var(--sara-ink)">
+        <span class="placeholder-emoji">🙈</span>
+        <div class="big">Hmm… ce code n’ouvre rien</div>
+        <div class="subtle">Réessaie avec le bon code secret 🔑</div></div>`;
+      box.classList.add('shake');
+      return;
+    }
+    if(hit.type==='video'){
+      box.innerHTML = `<div class="result filled">
+        <div class="big">🎬 Vidéo déverrouillée&nbsp;!</div>
+        <div class="media-box"><div class="play">▶</div></div>
+        <p class="note">⏳ ${esc(hit.message)} — l’URL sera fournie par l’organisatrice (placeholder).</p></div>`;
+    }else{
+      box.innerHTML = `<div class="result filled">
+        <div class="big">🎧 Message audio déverrouillé&nbsp;!</div>
+        <div class="media-box audio"><div class="bars"><span></span><span></span><span></span><span></span><span></span></div></div>
+        <p class="note">⏳ ${esc(hit.message)} — l’URL sera fournie par l’organisatrice (placeholder).</p></div>`;
+    }
+  }, 750);
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+function initAvatars(){
+  $('#avatars').innerHTML = EQUIPE.map((n,i)=>
+    `<div class="avatar" title="${esc(n)}" style="background:${tileColors[i%tileColors.length]}">${esc(n[0])}</div>`).join('');
+}
+$('#filter').addEventListener('input', e=>renderPlanning(e.target.value));
+
+initAvatars();
+renderPlanning();
+renderMeals();
+renderCourses();
+renderGallery();
+</script>
+</body>
+</html>
