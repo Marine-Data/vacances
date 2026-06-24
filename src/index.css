@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Design tokens (contracts.md §6.1) — canaux RGB pour l'opacité Tailwind ===== */
+:root {
+  --sara-blue: 142 197 255;
+  --sara-pink: 255 184 217;
+  --sara-yellow: 255 224 102;
+  --sara-green: 160 232 192;
+  --sara-purple: 199 184 255;
+  --sara-orange: 255 197 158;
+  --sara-ink: 43 45 66;
+  --sara-paper: 255 247 251;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply font-body text-sara-ink;
+    margin: 0;
+    -webkit-tap-highlight-color: transparent;
+    /* Fond pastel multicolore derrière le « téléphone » (contracts.md §6.3). */
+    background:
+      radial-gradient(circle at 18% 12%, rgb(var(--sara-purple) / 0.55), transparent 42%),
+      radial-gradient(circle at 85% 22%, rgb(var(--sara-blue) / 0.55), transparent 45%),
+      radial-gradient(circle at 80% 88%, rgb(var(--sara-pink) / 0.55), transparent 45%),
+      radial-gradient(circle at 12% 85%, rgb(var(--sara-green) / 0.5), transparent 45%),
+      #f3e9ff;
+    background-attachment: fixed;
+  }
+
+  /* Centre le conteneur « téléphone » sur grand écran (contracts.md §6.3). */
+  #root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+  }
+}
