@@ -1,0 +1,10 @@
+dist
+coverage
+node_modules
+graphify-out
+mockup
+index.html
+seed
+supabase/migrations
+pnpm-lock.yaml
+package-lock.json
