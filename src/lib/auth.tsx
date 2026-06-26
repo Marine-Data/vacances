@@ -11,6 +11,8 @@ interface AuthContextValue {
   loading: boolean
   /** Connexion par pseudo + mot de passe. Renvoie `{ error }` (null si succès). */
   login: (pseudo: string, password: string) => Promise<{ error: string | null }>
+  /** Inscription : crée un compte + connecte. Renvoie `{ error }` (null si succès). */
+  register: (pseudo: string, password: string) => Promise<{ error: string | null }>
   logout: () => Promise<void>
 }
 
@@ -22,6 +24,8 @@ function frenchAuthError(message: string): string {
   if (/email not confirmed/i.test(message)) return "Ce compte n'est pas encore activé."
   if (/rate limit|too many/i.test(message)) return 'Trop de tentatives. Réessaie dans un instant.'
   if (/network|fetch|failed to/i.test(message)) return 'Connexion impossible. Vérifie ta connexion.'
+  if (/user already registered/i.test(message)) return 'Ce pseudo existe déjà.'
+  if (/password should be at least 6 characters/i.test(message)) return 'Le mot de passe doit faire au moins 6 caractères.'
   return message
 }
 
@@ -55,6 +59,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         return { error: error ? frenchAuthError(error.message) : null }
       },
+      async register(pseudo, password) {
+        const email = pseudoToEmail(pseudo)
+        const { error } = await supabase.auth.signUp({ email, password })
+        if (error) return { error: frenchAuthError(error.message) }
+        // Après signup réussi, on essaie de se connecter automatiquement
+        const loginResult = await supabase.auth.signInWithPassword({ email, password })
+        return { error: loginResult.error ? frenchAuthError(loginResult.error.message) : null }
+      },
       async logout() {
         await supabase.auth.signOut()
       },
@@ -67,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth doit être utilisé à l’intérieur de <AuthProvider>.')
+  if (!ctx) throw new Error('useAuth doit être utilisé à l'intérieur de <AuthProvider>.')
   return ctx
 }
 
