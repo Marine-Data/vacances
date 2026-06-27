@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Screen, Card, Button, Loader, EmptyState } from '../../components'
+import { Screen, Card, Loader, EmptyState } from '../../components'
 import { useAuth } from '../../lib/auth'
 
 export default function GaleriePage() {

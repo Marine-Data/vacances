@@ -9,12 +9,12 @@ export default function RepasPage() {
 
   useEffect(() => {
     loadCourses()
-    const sub = supabase.on('postgres_changes', {
+    const channel = supabase.channel('courses').on('postgres_changes', {
       event: '*',
       schema: 'public',
       table: 'courses'
     }, () => loadCourses()).subscribe()
-    return () => sub.unsubscribe()
+    return () => channel.unsubscribe()
   }, [])
 
   async function loadCourses() {
