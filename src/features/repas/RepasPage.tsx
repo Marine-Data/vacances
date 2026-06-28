@@ -14,7 +14,7 @@ export default function RepasPage() {
       schema: 'public',
       table: 'courses'
     }, () => loadCourses()).subscribe()
-    return () => channel.unsubscribe()
+    return () => { void channel.unsubscribe() }
   }, [])
 
   async function loadCourses() {
