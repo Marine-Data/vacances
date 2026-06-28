@@ -82,7 +82,7 @@
     .nav-item.active { background: #a0e8c0; border-top: 3px solid #2b2d42; margin-top: -3px; }
     .nav-item-emoji { font-size: 20px; }
 
-    input[type="text"], input[type="password"] {
+    input[type="text"], input[type="password"], input[type="file"] {
       width: 100%; padding: 10px 12px; border: 3px solid #2b2d42; border-radius: 12px;
       font-family: "Baloo 2"; font-size: 13px; margin-bottom: 10px;
       box-shadow: 3px 3px 0 #2b2d42;
@@ -92,8 +92,9 @@
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .grid-item {
       background: white; border: 2px solid #2b2d42; border-radius: 12px; padding: 10px;
-      text-align: center; font-size: 11px; font-weight: bold;
+      text-align: center; font-size: 11px; font-weight: bold; cursor: pointer;
     }
+    .grid-item:active { transform: translate(1px, 1px); }
 
     .secret-box {
       background: linear-gradient(135deg, #c7b8ff, #ffc59e); border: 3px solid #2b2d42;
@@ -102,6 +103,38 @@
     }
     .secret-box h3 { font-size: 16px; margin-bottom: 8px; }
     .secret-box p { font-size: 12px; }
+
+    /* PLANNING SEMAINIER */
+    .week-table {
+      width: 100%; border-collapse: collapse; font-size: 10px;
+    }
+    .week-table td, .week-table th {
+      border: 2px solid #2b2d42; padding: 6px 4px; text-align: center;
+    }
+    .week-table th {
+      background: #8ec5ff; font-weight: bold; font-family: "Press Start 2P"; font-size: 8px;
+    }
+    .week-table .time-slot {
+      background: #fff7fb; font-weight: bold; font-family: "Press Start 2P"; font-size: 8px;
+    }
+    .week-table .activity {
+      background: white; cursor: pointer; transition: background 0.1s;
+      min-height: 30px; display: flex; align-items: center; justify-content: center;
+    }
+    .week-table .activity:hover { background: #ffe066; }
+
+    /* MODAL DÉTAIL */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z: 1000; }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: #fff7fb; border: 4px solid #2b2d42; border-radius: 16px; padding: 20px;
+      max-width: 350px; max-height: 600px; overflow-y: auto; box-shadow: 0 12px 0 #2b2d42;
+    }
+    .modal-close {
+      float: right; cursor: pointer; font-size: 18px; font-weight: bold; color: #2b2d42;
+    }
+    .modal h3 { font-size: 14px; margin-bottom: 12px; color: #2b2d42; }
+    .modal p { font-size: 11px; margin-bottom: 8px; color: #2b2d42; }
   </style>
 </head>
 <body>
@@ -112,19 +145,32 @@
     </header>
 
     <main>
-      <!-- PAGE 1: PLANNING -->
+      <!-- PAGE 1: PLANNING SEMAINIER -->
       <div class="page active" id="planning">
-        <h2>📅 Planning</h2>
-        <div id="planning-list"></div>
+        <h2>📅 Planning - Semaine</h2>
+        <table class="week-table" id="week-table"></table>
+        <button class="button" style="margin-top: 12px;" onclick="showPage('planning-jour')">📆 Vue jour</button>
+      </div>
+
+      <!-- PAGE 1B: PLANNING JOUR -->
+      <div class="page" id="planning-jour">
+        <h2>📅 Planning - Jour</h2>
+        <select id="day-select" style="width: 100%; padding: 8px; margin-bottom: 12px; border: 2px solid #2b2d42; border-radius: 8px;">
+        </select>
+        <div id="day-activities"></div>
+        <button class="button" onclick="showPage('planning')">← Retour semaine</button>
       </div>
 
       <!-- PAGE 2: JEUX & CORVÉES -->
       <div class="page" id="jeux">
         <h2>🎲 Jeux & Corvées</h2>
-        <button class="button" onclick="tirageCor()">🎲 Nouvelle corvée</button>
+        <p style="font-size: 11px; font-weight: bold; margin-bottom: 12px;">Corvées d'aujourd'hui:</p>
+        <div id="corvee-list"></div>
+        <br />
+        <button class="button" onclick="tirageCor()" style="background: #ffb8d9;">🎲 Nouvelle corvée</button>
         <div id="corvee-result" style="margin-top: 16px;"></div>
         <br />
-        <button class="button" onclick="tirageDefi()" style="background: #ffb8d9;">🌟 Nouveau défi</button>
+        <button class="button" onclick="tirageDefi()" style="background: #c7b8ff;">🌟 Nouveau défi</button>
         <div id="defi-result" style="margin-top: 16px;"></div>
       </div>
 
@@ -142,7 +188,10 @@
           <p>🎵 Playlist Deezer</p>
           <p style="font-size: 10px; margin-top: 8px;">Link: deezer.com/playlist/vacation</p>
         </div>
-        <p style="font-size: 11px; font-weight: bold;">Grille photos:</p>
+        <p style="font-size: 11px; font-weight: bold; margin-bottom: 8px;">📤 Upload photos/vidéos:</p>
+        <input type="file" id="media-upload" accept="image/*,video/*" />
+        <button class="button" onclick="uploadMedia()" style="background: #a0e8c0;">📤 Uploader</button>
+        <p style="font-size: 11px; font-weight: bold; margin-top: 16px; margin-bottom: 8px;">Grille photos:</p>
         <div class="grid">
           <div class="grid-item">📷 Photo 1</div>
           <div class="grid-item">📷 Photo 2</div>
@@ -184,40 +233,48 @@
     </nav>
   </div>
 
+  <!-- MODAL DÉTAIL ACTIVITÉ -->
+  <div class="modal" id="activity-modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal()">✕</span>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
   <script>
     const EQUIPE = ["Chunfei", "Mathilde", "Nawaelle", "Sonia", "Inès", "Marine", "Delphine"];
     const CORVEES = [
-      "Sortir les poubelles le soir",
-      "Préparer le café du midi",
-      "Passer l'aspirateur après le repas",
-      "Faire les courses",
-      "Préparer le petit-déjeuner",
-      "Préparer le déjeuner",
-      "Préparer le dîner",
-      "Rentrer les poubelles le matin"
+      { heure: "08h", tache: "Préparer le petit-déjeuner" },
+      { heure: "12h", tache: "Préparer le café du midi" },
+      { heure: "12h30", tache: "Préparer le déjeuner" },
+      { heure: "14h", tache: "Passer l'aspirateur après le repas" },
+      { heure: "16h", tache: "Faire les courses" },
+      { heure: "19h", tache: "Préparer le dîner" },
+      { heure: "22h", tache: "Sortir les poubelles le soir" },
+      { heure: "08h", tache: "Rentrer les poubelles le matin" }
     ];
     const DEFIS = [
       "Faire un selfie de groupe 🤳",
       "Danser 10 secondes 💃",
       "Crier à la mer 🌊"
     ];
-        const PLANNING = [
-      { jour: "Vendredi", activite: "Apéro au Mourillon", horaires: "22h", emoji: "🍹" },
-      { jour: "Samedi", activite: "Aéroport", horaires: "09h30", emoji: "✈️" },
-      { jour: "Samedi", activite: "Calanques", horaires: "14h", emoji: "🏖️" },
-      { jour: "Samedi", activite: "Soirée Friche", horaires: "20h", emoji: "🎉" },
-      { jour: "Dimanche", activite: "Surprises 🎁", horaires: "10h30", emoji: "🎂" },
-      { jour: "Lundi", activite: "Plongée (inscription)", horaires: "09h", emoji: "🤿" },
-      { jour: "Mardi", activite: "Balade en bateau (inscription)", horaires: "09h30", emoji: "⛵" },
-      { jour: "Mardi", activite: "Répartition équipes show", horaires: "13h", emoji: "🎭" },
-      { jour: "Mercredi", activite: "Stand-up paddle (Anse Méjean)", horaires: "10h", emoji: "🏄" },
-      { jour: "Jeudi", activite: "Via Ferrata (inscription)", horaires: "09h", emoji: "🧗" },
-      { jour: "Jeudi", activite: "Show your Talent - répétitions", horaires: "15h", emoji: "🎬" },
-      { jour: "Jeudi", activite: "Show your Talent - spectacle (inscription)", horaires: "20h", emoji: "⭐" },
-      { jour: "Vendredi", activite: "Ateliers invités", horaires: "10h", emoji: "🎨" },
-      { jour: "Vendredi", activite: "Réveillon", horaires: "21h", emoji: "🎆" },
-      { jour: "Samedi", activite: "Piscine + Soirée clôture", horaires: "15h", emoji: "🏊" },
-      { jour: "Dimanche", activite: "Départ", horaires: "09h", emoji: "👋" }
+    const PLANNING = [
+      { jour: "Vendredi", activite: "Apéro au Mourillon", horaires: "22h", heure_sort: 22 },
+      { jour: "Samedi", activite: "Aéroport", horaires: "09h30", heure_sort: 9.5 },
+      { jour: "Samedi", activite: "Calanques", horaires: "14h", heure_sort: 14 },
+      { jour: "Samedi", activite: "Soirée Friche", horaires: "20h", heure_sort: 20 },
+      { jour: "Dimanche", activite: "Surprises 🎁", horaires: "10h30", heure_sort: 10.5 },
+      { jour: "Lundi", activite: "Plongée", horaires: "09h", heure_sort: 9 },
+      { jour: "Mardi", activite: "Balade en bateau", horaires: "09h30", heure_sort: 9.5 },
+      { jour: "Mardi", activite: "Répartition équipes show", horaires: "13h", heure_sort: 13 },
+      { jour: "Mercredi", activite: "Stand-up paddle (Anse Méjean)", horaires: "10h", heure_sort: 10 },
+      { jour: "Jeudi", activite: "Via Ferrata", horaires: "09h", heure_sort: 9 },
+      { jour: "Jeudi", activite: "Show your Talent - répétitions", horaires: "15h", heure_sort: 15 },
+      { jour: "Jeudi", activite: "Show your Talent - spectacle", horaires: "20h", heure_sort: 20 },
+      { jour: "Vendredi", activite: "Ateliers invités", horaires: "10h", heure_sort: 10 },
+      { jour: "Vendredi", activite: "Réveillon", horaires: "21h", heure_sort: 21 },
+      { jour: "Samedi", activite: "Piscine + Soirée clôture", horaires: "15h", heure_sort: 15 },
+      { jour: "Dimanche", activite: "Départ", horaires: "09h", heure_sort: 9 }
     ];
     const SECRETS = {
       "VACANCES2026": { type: "video", emoji: "🎬", msg: "Vidéo surprise" },
@@ -228,20 +285,58 @@
       document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
       document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
       document.getElementById(pageId).classList.add("active");
-      event.currentTarget.classList.add("active");
+      event.currentTarget?.classList.add("active");
 
-      if (pageId === "planning") renderPlanning();
+      if (pageId === "planning") renderWeeklyPlanning();
+      if (pageId === "planning-jour") renderDayPlanning();
+      if (pageId === "jeux") renderJeux();
       if (pageId === "repas") renderRepas();
     }
 
-    function renderPlanning() {
-      const html = PLANNING.map(a => `
-        <div class="card">
-          <h3>${a.emoji} ${a.activite}</h3>
-          <p>${a.jour} • ${a.horaires}</p>
+    function renderWeeklyPlanning() {
+      const days = [...new Set(PLANNING.map(a => a.jour))];
+      const hours = ["Matin\n(06-12h)", "Midi\n(12-18h)", "Soir\n(18-24h)"];
+      let html = "<tr><th>Horaire</th>";
+      days.forEach(d => html += `<th>${d}</th>`);
+      html += "</tr>";
+
+      hours.forEach((hour, idx) => {
+        html += `<tr><td class="time-slot">${hour}</td>`;
+        days.forEach(day => {
+          const activity = PLANNING.find(a => a.jour === day && 
+            ((idx === 0 && a.heure_sort < 12) || (idx === 1 && a.heure_sort >= 12 && a.heure_sort < 18) || (idx === 2 && a.heure_sort >= 18)));
+          html += `<td class="activity" onclick="showActivityDetail('${activity?.activite || ''}')">
+            ${activity ? activity.activite : '-'}
+          </td>`;
+        });
+        html += "</tr>";
+      });
+
+      document.getElementById("week-table").innerHTML = html;
+    }
+
+    function renderDayPlanning() {
+      const days = [...new Set(PLANNING.map(a => a.jour))];
+      const select = document.getElementById("day-select");
+      if (!select.innerHTML) {
+        select.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join("");
+        select.onchange = renderDayPlanning;
+      }
+      const selectedDay = select.value || days[0];
+      const activities = PLANNING.filter(a => a.jour === selectedDay);
+      const html = activities.map(a => `
+        <div class="card" onclick="showActivityDetail('${a.activite}')">
+          <h3>${a.activite}</h3>
+          <p>${a.horaires}</p>
         </div>
       `).join("");
-      document.getElementById("planning-list").innerHTML = html;
+      document.getElementById("day-activities").innerHTML = html || "<div class='empty'><div class='empty-emoji'>🕳️</div>Aucune activité</div>";
+    }
+
+    function renderJeux() {
+      const corveesByTime = CORVEES.sort((a, b) => a.heure.localeCompare(b.heure));
+      const html = corveesByTime.map(c => `<div class="card" style="margin-bottom: 6px;"><p><strong>${c.heure}:</strong> ${c.tache}</p></div>`).join("");
+      document.getElementById("corvee-list").innerHTML = html;
     }
 
     function renderRepas() {
@@ -252,11 +347,29 @@
           <div class="card">
             <h3>📅 ${j}</h3>
             <p>${repas}</p>
-            <div class="meta">Reponsable: à définir</div>
+            <div class="meta">Responsable: à définir</div>
           </div>
         `;
       }).join("");
       document.getElementById("repas-list").innerHTML = html;
+    }
+
+    function showActivityDetail(activite) {
+      if (!activite) return;
+      const activity = PLANNING.find(a => a.activite === activite);
+      if (!activity) return;
+      const html = `
+        <h3>${activity.activite}</h3>
+        <p><strong>Jour:</strong> ${activity.jour}</p>
+        <p><strong>Horaires:</strong> ${activity.horaires}</p>
+        <p><strong>Lieu/Détails:</strong> À définir</p>
+      `;
+      document.getElementById("modal-body").innerHTML = html;
+      document.getElementById("activity-modal").classList.add("active");
+    }
+
+    function closeModal() {
+      document.getElementById("activity-modal").classList.remove("active");
     }
 
     function tirageCor() {
@@ -265,7 +378,7 @@
       document.getElementById("corvee-result").innerHTML = `
         <div class="secret-box" style="background: linear-gradient(135deg, #a0e8c0, #ffb8d9);">
           <h3>${pers}</h3>
-          <p>${cor}</p>
+          <p>${cor.tache}</p>
         </div>
       `;
     }
@@ -278,6 +391,12 @@
           <p>${defi}</p>
         </div>
       `;
+    }
+
+    function uploadMedia() {
+      const file = document.getElementById("media-upload").files[0];
+      if (!file) return alert("Choisis un fichier!");
+      alert(`📤 ${file.name} serait uploadé!\n(Intégration Supabase nécessaire)`);
     }
 
     function revelerSecret() {
@@ -298,7 +417,7 @@
     }
 
     // Init
-    renderPlanning();
+    renderWeeklyPlanning();
   </script>
 </body>
 </html>
