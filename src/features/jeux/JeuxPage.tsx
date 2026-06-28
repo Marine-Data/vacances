@@ -1,64 +1,65 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Screen, Card, Button, EmptyState } from '../../components'
 
 export default function JeuxPage() {
-  const [defiTexte, setDefiTexte] = useState('')
-  const [corveeTexte, setCorveeTexte] = useState('')
-  const [prenomTexte, setPrenomTexte] = useState('')
+  const [assignments, setAssignments] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const today = new Date().toISOString().split('T')[0]
 
-  async function tirerDefi() {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('defis')
-      .select('texte')
-      .eq('actif', true)
-      .limit(1)
+  useEffect(() => {
+    loadAssignments()
+  }, [])
+
+  async function loadAssignments() {
+    const { data } = await supabase
+      .from('corvee_assignments')
+      .select('prenom, tache')
+      .eq('date', today)
+      .order('prenom')
     
-    if (!error && data?.length) {
-      const random = data[Math.floor(Math.random() * data.length)]
-      setDefiTexte(random.texte)
-    }
-    setLoading(false)
+    setAssignments(data ?? [])
   }
 
-  async function tirerLoto() {
+  async function tirerCorves() {
     setLoading(true)
-    const { data: corvees } = await supabase.from('corvees').select('tache')
-    const { data: equipe } = await supabase.from('equipe').select('prenom')
-    
-    if (corvees?.length && equipe?.length) {
-      setCorveeTexte(corvees[Math.floor(Math.random() * corvees.length)].tache)
-      setPrenomTexte(equipe[Math.floor(Math.random() * equipe.length)].prenom)
+    try {
+      const response = await fetch('https://iupghubmnibbdipingnj.supabase.co/functions/v1/tirage-corvees-daily', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: today })
+      })
+      
+      if (response.ok) {
+        await loadAssignments()
+      }
+    } catch (err) {
+      console.error(err)
     }
     setLoading(false)
   }
 
   return (
     <Screen title="🎲 Jeux & Défis">
-      <div className="space-y-4">
-        <Card>
-          <h3 className="font-bold mb-3">📢 Défi du jour</h3>
-          {defiTexte && <p className="text-lg font-bold text-sara-yellow mb-3">{defiTexte}</p>}
-          <Button onClick={tirerDefi} color="yellow" disabled={loading} className="w-full">
-            {loading ? '...' : '🎲 Nouveau défi'}
-          </Button>
-        </Card>
-
-        <Card>
-          <h3 className="font-bold mb-3">🎪 Loto corvées</h3>
-          {corveeTexte && (
-            <div className="space-y-2 mb-3">
-              <p className="text-sm">📝 Corvée: <span className="font-bold">{corveeTexte}</span></p>
-              <p className="text-sm">👤 Assignée à: <span className="font-bold text-sara-pink">{prenomTexte}</span></p>
-            </div>
-          )}
-          <Button onClick={tirerLoto} color="pink" disabled={loading} className="w-full">
-            {loading ? '...' : '🎯 Tirage'}
-          </Button>
-        </Card>
-      </div>
+      <Card className="mb-4">
+        <h3 className="font-bold mb-3">🎪 Corvées du jour</h3>
+        <Button onClick={tirerCorves} color="pink" disabled={loading} className="w-full mb-4">
+          {loading ? '...' : '🎯 Nouveau tirage'}
+        </Button>
+        
+        {assignments.length === 0 ? (
+          <EmptyState emoji="📋" title="Aucune corvée assignée" hint="Fais un tirage !" />
+        ) : (
+          <div className="space-y-2">
+            {assignments.map((a, i) => (
+              <div key={i} className="flex justify-between items-center p-2 bg-sara-paper rounded border-2 border-sara-ink">
+                <span className="font-bold text-sara-pink">{a.prenom}</span>
+                <span className="text-sm text-sara-ink">{a.tache}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </Screen>
   )
 }
