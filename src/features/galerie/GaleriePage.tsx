@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
-import { Screen, Card, Loader, EmptyState } from '../../components'
-import { useAuth } from '../../lib/auth'
+import { Screen, Card, EmptyState } from '../../components'
 
 export default function GaleriePage() {
-  const { user } = useAuth()
   const [photos, setPhotos] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     loadPhotos()
@@ -15,10 +12,7 @@ export default function GaleriePage() {
   async function loadPhotos() {
     const { data } = await supabase.from('photos').select('*').order('created_at', { ascending: false })
     setPhotos(data ?? [])
-    setLoading(false)
   }
-
-  if (loading) return <Loader />
 
   return (
     <Screen title="📸 Galerie">

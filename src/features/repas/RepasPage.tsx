@@ -9,6 +9,11 @@ export default function RepasPage() {
 
   useEffect(() => {
     loadCourses()
+    const channel = supabase.channel('courses')
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'courses' }, () => {
+      loadCourses()
+    }).subscribe()
+    return () => { void channel.unsubscribe() }
   }, [])
 
   async function loadCourses() {
@@ -21,18 +26,15 @@ export default function RepasPage() {
     if (!newItem.trim()) return
     await supabase.from('courses').insert({ libelle: newItem })
     setNewItem('')
-    await loadCourses()
   }
 
   async function toggleItem(id: string) {
     const item = courses.find(c => c.id === id)
     await supabase.from('courses').update({ is_checked: !item.is_checked }).eq('id', id)
-    await loadCourses()
   }
 
   async function deleteItem(id: string) {
     await supabase.from('courses').delete().eq('id', id)
-    await loadCourses()
   }
 
   if (loading) return <Loader />

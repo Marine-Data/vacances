@@ -3,61 +3,62 @@ import { supabase } from '../../lib/supabase'
 import { Screen, Card, Button, EmptyState } from '../../components'
 
 export default function JeuxPage() {
-  const [defi, setDefi] = useState<any>(null)
-  const [corvee, setCorvee] = useState<any>(null)
+  const [defiTexte, setDefiTexte] = useState('')
+  const [corveeTexte, setCorveeTexte] = useState('')
+  const [prenomTexte, setPrenomTexte] = useState('')
   const [loading, setLoading] = useState(false)
 
   async function tirerDefi() {
     setLoading(true)
-    const { data: defis, error } = await supabase.from('defis').select('*').eq('actif', true)
-    if (!error && defis && defis.length > 0) {
-      setDefi(defis[Math.floor(Math.random() * defis.length)])
+    const { data, error } = await supabase
+      .from('defis')
+      .select('texte')
+      .eq('actif', true)
+      .limit(1)
+    
+    if (!error && data?.length) {
+      const random = data[Math.floor(Math.random() * data.length)]
+      setDefiTexte(random.texte)
     }
     setLoading(false)
   }
 
-  async function tirerCorvee() {
+  async function tirerLoto() {
     setLoading(true)
-    const { data: corvees } = await supabase.from('corvees').select('*')
-    const { data: team } = await supabase.from('equipe').select('*')
+    const { data: corvees } = await supabase.from('corvees').select('tache')
+    const { data: equipe } = await supabase.from('equipe').select('prenom')
     
-    if (corvees && team && corvees.length > 0 && team.length > 0) {
-      setCorvee({
-        tache: corvees[Math.floor(Math.random() * corvees.length)],
-        prenom: team[Math.floor(Math.random() * team.length)]
-      })
+    if (corvees?.length && equipe?.length) {
+      setCorveeTexte(corvees[Math.floor(Math.random() * corvees.length)].tache)
+      setPrenomTexte(equipe[Math.floor(Math.random() * equipe.length)].prenom)
     }
     setLoading(false)
   }
 
   return (
     <Screen title="🎲 Jeux & Défis">
-      <Card className="mb-4">
-        <h3 className="font-bold mb-2">Défi du jour</h3>
-        {defi ? (
-          <p className="text-lg">{defi.texte} 🎯</p>
-        ) : (
-          <EmptyState emoji="🎲" title="Pas de défi pour l'instant" />
-        )}
-        <Button onClick={tirerDefi} color="yellow" className="mt-4 w-full" disabled={loading}>
-          {loading ? '...' : '🎲 Nouveau défi'}
-        </Button>
-      </Card>
+      <div className="space-y-4">
+        <Card>
+          <h3 className="font-bold mb-3">📢 Défi du jour</h3>
+          {defiTexte && <p className="text-lg font-bold text-sara-yellow mb-3">{defiTexte}</p>}
+          <Button onClick={tirerDefi} color="yellow" disabled={loading} className="w-full">
+            {loading ? '...' : '🎲 Nouveau défi'}
+          </Button>
+        </Card>
 
-      <Card>
-        <h3 className="font-bold mb-2">Loto corvées</h3>
-        {corvee ? (
-          <div className="text-lg">
-            <p>📋 Tâche: {corvee.tache.tache}</p>
-            <p>👤 Assignée à: {corvee.prenom.prenom}</p>
-          </div>
-        ) : (
-          <EmptyState emoji="🎰" title="Tire une corvée" />
-        )}
-        <Button onClick={tirerCorvee} color="green" className="mt-4 w-full" disabled={loading}>
-          {loading ? '...' : '🎰 Tirage'}
-        </Button>
-      </Card>
+        <Card>
+          <h3 className="font-bold mb-3">🎪 Loto corvées</h3>
+          {corveeTexte && (
+            <div className="space-y-2 mb-3">
+              <p className="text-sm">📝 Corvée: <span className="font-bold">{corveeTexte}</span></p>
+              <p className="text-sm">👤 Assignée à: <span className="font-bold text-sara-pink">{prenomTexte}</span></p>
+            </div>
+          )}
+          <Button onClick={tirerLoto} color="pink" disabled={loading} className="w-full">
+            {loading ? '...' : '🎯 Tirage'}
+          </Button>
+        </Card>
+      </div>
     </Screen>
   )
 }

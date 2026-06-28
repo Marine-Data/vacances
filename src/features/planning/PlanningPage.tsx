@@ -9,13 +9,18 @@ export default function PlanningPage() {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Programme | null>(null)
   const [loading, setLoading] = useState(true)
+  const [editingResponsables, setEditingResponsables] = useState('')
+  const [editingPetitDej, setEditingPetitDej] = useState('')
 
   useEffect(() => {
-    supabase.from('programme').select('*').order('ordre').then(({ data }) => {
-      setActivities(data ?? [])
-      setLoading(false)
-    })
+    loadActivities()
   }, [])
+
+  async function loadActivities() {
+    const { data } = await supabase.from('programme').select('*').order('ordre')
+    setActivities(data ?? [])
+    setLoading(false)
+  }
 
   useEffect(() => {
     setFiltered(activities.filter(a => 
@@ -23,6 +28,15 @@ export default function PlanningPage() {
       a.jour.toLowerCase().includes(search.toLowerCase())
     ))
   }, [search, activities])
+
+  async function updateField(id: string, field: string, value: string) {
+    await supabase.from('programme').update({ [field]: value }).eq('id', id)
+    await loadActivities()
+    if (selected?.id === id) {
+      const updated = activities.find(a => a.id === id)
+      if (updated) setSelected(updated)
+    }
+  }
 
   if (loading) return <Loader />
 
@@ -35,7 +49,7 @@ export default function PlanningPage() {
             <EmptyState emoji="🗓️" title="Aucune activité" />
           ) : (
             filtered.map(a => (
-              <Card key={a.id} tappable onClick={() => setSelected(a)}>
+              <Card key={a.id} tappable onClick={() => { setSelected(a); setEditingResponsables(a.responsables || ''); setEditingPetitDej(a.petit_dejeuner || ''); }}>
                 <p className="font-bold">{a.activite}</p>
                 <p className="text-sm opacity-60">{a.jour} • {a.horaires}</p>
               </Card>
@@ -54,10 +68,16 @@ export default function PlanningPage() {
         <p className="text-sm mt-2">{selected.jour} • {selected.horaires}</p>
         {selected.lieu_details && <p className="mt-2">📍 {selected.lieu_details}</p>}
         {selected.inscription_requise && selected.lien_inscription && (
-          <a href={selected.lien_inscription} target="_blank" className="text-blue-600 underline mt-2">
-            🔗 S'inscrire
-          </a>
+          <a href={selected.lien_inscription} target="_blank" className="text-blue-600 underline mt-2">🔗 S'inscrire</a>
         )}
+        {selected.repas_concerne && <p className="mt-2">🍽️ {selected.repas_concerne}</p>}
+        
+        <div className="mt-4 border-t pt-3">
+          <label className="text-xs font-bold">Responsables</label>
+          <Input value={editingResponsables} onChange={e => setEditingResponsables(e.target.value)} className="mt-1" />
+          <Button onClick={() => updateField(selected.id, 'responsables', editingResponsables)} color="green" size="sm" className="mt-2 w-full">💾 Enregistrer</Button>
+        </div>
+
         {selected.regimes_allergies && <p className="text-xs mt-3">⚠️ {selected.regimes_allergies}</p>}
       </Card>
     </Screen>
