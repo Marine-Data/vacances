@@ -1,22 +1,423 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>🏖️ Saraillon — Séjour entre amies</title>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏖️</text></svg>"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏖️ SARAILLON</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@400;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #app { height: 100%; }
+    body {
+      font-family: "Baloo 2", sans-serif;
+      background: linear-gradient(135deg, rgba(199,184,255,0.3), rgba(142,197,255,0.3), rgba(255,184,217,0.3), rgba(160,232,192,0.3)) fixed;
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #phone {
+      width: 390px; height: 844px; background: #fff7fb; border: 4px solid #2b2d42; border-radius: 34px;
+      display: flex; flex-direction: column; box-shadow: 0 12px 0 #2b2d42;
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #8ec5ff, #ffb8d9);
+      padding: 12px 16px; border-bottom: 3px solid #2b2d42;
+      color: #2b2d42; font-weight: bold;
+    }
+    header h1 {
+      font-family: "Press Start 2P"; font-size: 14px; margin-bottom: 6px;
+    }
+    header p { font-size: 12px; opacity: 0.8; }
+
+    main {
+      flex: 1; overflow-y: auto; padding: 16px 12px; padding-bottom: 68px;
+    }
+    .page { display: none; animation: fadeIn 0.2s; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .page h2 {
+      font-family: "Press Start 2P"; font-size: 12px; margin-bottom: 12px; color: #2b2d42;
+    }
+
+    .card {
+      background: white; border: 3px solid #2b2d42; border-radius: 16px; padding: 12px;
+      margin-bottom: 10px; box-shadow: 4px 4px 0 #2b2d42;
+      cursor: pointer; transition: transform 0.1s;
+    }
+    .card:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #2b2d42; }
+    .card h3 { font-size: 14px; font-weight: bold; color: #2b2d42; margin-bottom: 4px; }
+    .card p { font-size: 12px; color: #2b2d42; opacity: 0.7; }
+    .card .meta { font-size: 10px; margin-top: 8px; }
+
+    .button {
+      background: #ffe066; border: 3px solid #2b2d42; border-radius: 12px; padding: 12px 16px;
+      font-weight: bold; font-size: 13px; cursor: pointer; box-shadow: 4px 4px 0 #2b2d42;
+      transition: transform 0.1s; font-family: "Baloo 2"; color: #2b2d42;
+    }
+    .button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #2b2d42; }
+
+    .badge {
+      display: inline-block; background: #ffc59e; border: 2px solid #2b2d42; border-radius: 8px;
+      padding: 4px 8px; font-size: 9px; font-family: "Press Start 2P"; margin: 2px;
+    }
+
+    .empty {
+      text-align: center; padding: 24px; font-size: 14px;
+    }
+    .empty-emoji { font-size: 48px; margin-bottom: 12px; }
+
+    nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 390px; height: 56px; background: #fff7fb; border-top: 3px solid #2b2d42;
+      display: flex; justify-content: space-around; padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; cursor: pointer; font-size: 9px; font-family: "Press Start 2P";
+      transition: background 0.2s;
+    }
+    .nav-item.active { background: #a0e8c0; border-top: 3px solid #2b2d42; margin-top: -3px; }
+    .nav-item-emoji { font-size: 20px; }
+
+    input[type="text"], input[type="password"], input[type="file"] {
+      width: 100%; padding: 10px 12px; border: 3px solid #2b2d42; border-radius: 12px;
+      font-family: "Baloo 2"; font-size: 13px; margin-bottom: 10px;
+      box-shadow: 3px 3px 0 #2b2d42;
+    }
+    input::placeholder { color: #2b2d42; opacity: 0.4; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .grid-item {
+      background: white; border: 2px solid #2b2d42; border-radius: 12px; padding: 10px;
+      text-align: center; font-size: 11px; font-weight: bold; cursor: pointer;
+    }
+    .grid-item:active { transform: translate(1px, 1px); }
+
+    .secret-box {
+      background: linear-gradient(135deg, #c7b8ff, #ffc59e); border: 3px solid #2b2d42;
+      border-radius: 16px; padding: 16px; text-align: center;
+      box-shadow: 4px 4px 0 #2b2d42; margin: 16px 0;
+    }
+    .secret-box h3 { font-size: 16px; margin-bottom: 8px; }
+    .secret-box p { font-size: 12px; }
+
+    /* PLANNING SEMAINIER */
+    .week-table {
+      width: 100%; border-collapse: collapse; font-size: 10px;
+    }
+    .week-table td, .week-table th {
+      border: 2px solid #2b2d42; padding: 6px 4px; text-align: center;
+    }
+    .week-table th {
+      background: #8ec5ff; font-weight: bold; font-family: "Press Start 2P"; font-size: 8px;
+    }
+    .week-table .time-slot {
+      background: #fff7fb; font-weight: bold; font-family: "Press Start 2P"; font-size: 8px;
+    }
+    .week-table .activity {
+      background: white; cursor: pointer; transition: background 0.1s;
+      min-height: 30px; display: flex; align-items: center; justify-content: center;
+    }
+    .week-table .activity:hover { background: #ffe066; }
+
+    /* MODAL DÉTAIL */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; z: 1000; }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: #fff7fb; border: 4px solid #2b2d42; border-radius: 16px; padding: 20px;
+      max-width: 350px; max-height: 600px; overflow-y: auto; box-shadow: 0 12px 0 #2b2d42;
+    }
+    .modal-close {
+      float: right; cursor: pointer; font-size: 18px; font-weight: bold; color: #2b2d42;
+    }
+    .modal h3 { font-size: 14px; margin-bottom: 12px; color: #2b2d42; }
+    .modal p { font-size: 11px; margin-bottom: 8px; color: #2b2d42; }
+  </style>
+</head>
+<body>
+  <div id="phone">
+    <header>
+      <h1>🏖️ SARAILLON</h1>
+      <p>Séjour entre amies 2026 · salut!</p>
+    </header>
+
+    <main>
+      <!-- PAGE 1: PLANNING SEMAINIER -->
+      <div class="page active" id="planning">
+        <h2>📅 Planning - Semaine</h2>
+        <table class="week-table" id="week-table"></table>
+        <button class="button" style="margin-top: 12px;" onclick="showPage('planning-jour')">📆 Vue jour</button>
+      </div>
+
+      <!-- PAGE 1B: PLANNING JOUR -->
+      <div class="page" id="planning-jour">
+        <h2>📅 Planning - Jour</h2>
+        <select id="day-select" style="width: 100%; padding: 8px; margin-bottom: 12px; border: 2px solid #2b2d42; border-radius: 8px;">
+        </select>
+        <div id="day-activities"></div>
+        <button class="button" onclick="showPage('planning')">← Retour semaine</button>
+      </div>
+
+      <!-- PAGE 2: JEUX & CORVÉES -->
+      <div class="page" id="jeux">
+        <h2>🎲 Jeux & Corvées</h2>
+        <p style="font-size: 11px; font-weight: bold; margin-bottom: 12px;">Corvées d'aujourd'hui:</p>
+        <div id="corvee-list"></div>
+        <br />
+        <button class="button" onclick="tirageCor()" style="background: #ffb8d9;">🎲 Nouvelle corvée</button>
+        <div id="corvee-result" style="margin-top: 16px;"></div>
+        <br />
+        <button class="button" onclick="tirageDefi()" style="background: #c7b8ff;">🌟 Nouveau défi</button>
+        <div id="defi-result" style="margin-top: 16px;"></div>
+      </div>
+
+      <!-- PAGE 3: REPAS & COURSES -->
+      <div class="page" id="repas">
+        <h2>🍽️ Repas & Courses</h2>
+        <p style="font-size: 11px; margin-bottom: 12px; font-weight: bold;">Régime: 3 végétariennes, 2 sans porc 🥗</p>
+        <div id="repas-list"></div>
+      </div>
+
+      <!-- PAGE 4: GALERIE -->
+      <div class="page" id="galerie">
+        <h2>📸 Galerie</h2>
+        <div class="secret-box">
+          <p>🎵 Playlist Deezer</p>
+          <p style="font-size: 10px; margin-top: 8px;">Link: deezer.com/playlist/vacation</p>
+        </div>
+        <p style="font-size: 11px; font-weight: bold; margin-bottom: 8px;">📤 Upload photos/vidéos:</p>
+        <input type="file" id="media-upload" accept="image/*,video/*" />
+        <button class="button" onclick="uploadMedia()" style="background: #a0e8c0;">📤 Uploader</button>
+        <p style="font-size: 11px; font-weight: bold; margin-top: 16px; margin-bottom: 8px;">Grille photos:</p>
+        <div class="grid">
+          <div class="grid-item">📷 Photo 1</div>
+          <div class="grid-item">📷 Photo 2</div>
+          <div class="grid-item">📷 Photo 3</div>
+          <div class="grid-item">📷 Photo 4</div>
+        </div>
+      </div>
+
+      <!-- PAGE 5: SURPRISES -->
+      <div class="page" id="surprises">
+        <h2>🎁 Surprises Secrètes</h2>
+        <input type="text" id="code-input" placeholder="Code secret..." />
+        <button class="button" onclick="revelerSecret()" style="background: #ffb8d9;">✨ Révéler</button>
+        <div id="secret-result" style="margin-top: 16px;"></div>
+      </div>
+    </main>
+
+    <nav>
+      <div class="nav-item active" onclick="showPage('planning')">
+        <div class="nav-item-emoji">📅</div>
+        <div>PLANNING</div>
+      </div>
+      <div class="nav-item" onclick="showPage('jeux')">
+        <div class="nav-item-emoji">🎲</div>
+        <div>JEUX</div>
+      </div>
+      <div class="nav-item" onclick="showPage('repas')">
+        <div class="nav-item-emoji">🍽️</div>
+        <div>REPAS</div>
+      </div>
+      <div class="nav-item" onclick="showPage('galerie')">
+        <div class="nav-item-emoji">📸</div>
+        <div>GALERIE</div>
+      </div>
+      <div class="nav-item" onclick="showPage('surprises')">
+        <div class="nav-item-emoji">🎁</div>
+        <div>SURPRISES</div>
+      </div>
+    </nav>
+  </div>
+
+  <!-- MODAL DÉTAIL ACTIVITÉ -->
+  <div class="modal" id="activity-modal">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeModal()">✕</span>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    const EQUIPE = ["Chunfei", "Mathilde", "Nawaelle", "Sonia", "Inès", "Marine", "Delphine"];
+    const CORVEES = [
+      { heure: "08h", tache: "Préparer le petit-déjeuner" },
+      { heure: "12h", tache: "Préparer le café du midi" },
+      { heure: "12h30", tache: "Préparer le déjeuner" },
+      { heure: "14h", tache: "Passer l'aspirateur après le repas" },
+      { heure: "16h", tache: "Faire les courses" },
+      { heure: "19h", tache: "Préparer le dîner" },
+      { heure: "22h", tache: "Sortir les poubelles le soir" },
+      { heure: "08h", tache: "Rentrer les poubelles le matin" }
+    ];
+    const DEFIS = [
+      "Faire un selfie de groupe 🤳",
+      "Danser 10 secondes 💃",
+      "Crier à la mer 🌊"
+    ];
+    const PLANNING = [
+      { jour: "Vendredi", activite: "Apéro au Mourillon", horaires: "22h", heure_sort: 22 },
+      { jour: "Samedi", activite: "Aéroport", horaires: "09h30", heure_sort: 9.5 },
+      { jour: "Samedi", activite: "Calanques", horaires: "14h", heure_sort: 14 },
+      { jour: "Samedi", activite: "Soirée Friche", horaires: "20h", heure_sort: 20 },
+      { jour: "Dimanche", activite: "Surprises 🎁", horaires: "10h30", heure_sort: 10.5 },
+      { jour: "Lundi", activite: "Plongée", horaires: "09h", heure_sort: 9 },
+      { jour: "Mardi", activite: "Balade en bateau", horaires: "09h30", heure_sort: 9.5 },
+      { jour: "Mardi", activite: "Répartition équipes show", horaires: "13h", heure_sort: 13 },
+      { jour: "Mercredi", activite: "Stand-up paddle (Anse Méjean)", horaires: "10h", heure_sort: 10 },
+      { jour: "Jeudi", activite: "Via Ferrata", horaires: "09h", heure_sort: 9 },
+      { jour: "Jeudi", activite: "Show your Talent - répétitions", horaires: "15h", heure_sort: 15 },
+      { jour: "Jeudi", activite: "Show your Talent - spectacle", horaires: "20h", heure_sort: 20 },
+      { jour: "Vendredi", activite: "Ateliers invités", horaires: "10h", heure_sort: 10 },
+      { jour: "Vendredi", activite: "Réveillon", horaires: "21h", heure_sort: 21 },
+      { jour: "Samedi", activite: "Piscine + Soirée clôture", horaires: "15h", heure_sort: 15 },
+      { jour: "Dimanche", activite: "Départ", horaires: "09h", heure_sort: 9 }
+    ];
+    const SECRETS = {
+      "VACANCES2026": { type: "video", emoji: "🎬", msg: "Vidéo surprise" },
+      "SHOWTIME": { type: "audio", emoji: "🎵", msg: "Message audio" }
+    };
+
+    function showPage(pageId) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      document.getElementById(pageId).classList.add("active");
+      event.currentTarget?.classList.add("active");
+
+      if (pageId === "planning") renderWeeklyPlanning();
+      if (pageId === "planning-jour") renderDayPlanning();
+      if (pageId === "jeux") renderJeux();
+      if (pageId === "repas") renderRepas();
+    }
+
+    function renderWeeklyPlanning() {
+      const days = [...new Set(PLANNING.map(a => a.jour))];
+      const hours = ["Matin\n(06-12h)", "Midi\n(12-18h)", "Soir\n(18-24h)"];
+      let html = "<tr><th>Horaire</th>";
+      days.forEach(d => html += `<th>${d}</th>`);
+      html += "</tr>";
+
+      hours.forEach((hour, idx) => {
+        html += `<tr><td class="time-slot">${hour}</td>`;
+        days.forEach(day => {
+          const activity = PLANNING.find(a => a.jour === day && 
+            ((idx === 0 && a.heure_sort < 12) || (idx === 1 && a.heure_sort >= 12 && a.heure_sort < 18) || (idx === 2 && a.heure_sort >= 18)));
+          html += `<td class="activity" onclick="showActivityDetail('${activity?.activite || ''}')">
+            ${activity ? activity.activite : '-'}
+          </td>`;
+        });
+        html += "</tr>";
+      });
+
+      document.getElementById("week-table").innerHTML = html;
+    }
+
+    function renderDayPlanning() {
+      const days = [...new Set(PLANNING.map(a => a.jour))];
+      const select = document.getElementById("day-select");
+      if (!select.innerHTML) {
+        select.innerHTML = days.map(d => `<option value="${d}">${d}</option>`).join("");
+        select.onchange = renderDayPlanning;
+      }
+      const selectedDay = select.value || days[0];
+      const activities = PLANNING.filter(a => a.jour === selectedDay);
+      const html = activities.map(a => `
+        <div class="card" onclick="showActivityDetail('${a.activite}')">
+          <h3>${a.activite}</h3>
+          <p>${a.horaires}</p>
+        </div>
+      `).join("");
+      document.getElementById("day-activities").innerHTML = html || "<div class='empty'><div class='empty-emoji'>🕳️</div>Aucune activité</div>";
+    }
+
+    function renderJeux() {
+      const corveesByTime = CORVEES.sort((a, b) => a.heure.localeCompare(b.heure));
+      const html = corveesByTime.map(c => `<div class="card" style="margin-bottom: 6px;"><p><strong>${c.heure}:</strong> ${c.tache}</p></div>`).join("");
+      document.getElementById("corvee-list").innerHTML = html;
+    }
+
+    function renderRepas() {
+      const jours = [...new Set(PLANNING.map(a => a.jour))];
+      const html = jours.map(j => {
+        const repas = PLANNING.filter(a => a.jour === j).map(a => a.activite).join(", ");
+        return `
+          <div class="card">
+            <h3>📅 ${j}</h3>
+            <p>${repas}</p>
+            <div class="meta">Responsable: à définir</div>
+          </div>
+        `;
+      }).join("");
+      document.getElementById("repas-list").innerHTML = html;
+    }
+
+    function showActivityDetail(activite) {
+      if (!activite) return;
+      const activity = PLANNING.find(a => a.activite === activite);
+      if (!activity) return;
+      const html = `
+        <h3>${activity.activite}</h3>
+        <p><strong>Jour:</strong> ${activity.jour}</p>
+        <p><strong>Horaires:</strong> ${activity.horaires}</p>
+        <p><strong>Lieu/Détails:</strong> À définir</p>
+      `;
+      document.getElementById("modal-body").innerHTML = html;
+      document.getElementById("activity-modal").classList.add("active");
+    }
+
+    function closeModal() {
+      document.getElementById("activity-modal").classList.remove("active");
+    }
+
+    function tirageCor() {
+      const pers = EQUIPE[Math.floor(Math.random() * EQUIPE.length)];
+      const cor = CORVEES[Math.floor(Math.random() * CORVEES.length)];
+      document.getElementById("corvee-result").innerHTML = `
+        <div class="secret-box" style="background: linear-gradient(135deg, #a0e8c0, #ffb8d9);">
+          <h3>${pers}</h3>
+          <p>${cor.tache}</p>
+        </div>
+      `;
+    }
+
+    function tirageDefi() {
+      const defi = DEFIS[Math.floor(Math.random() * DEFIS.length)];
+      document.getElementById("defi-result").innerHTML = `
+        <div class="secret-box" style="background: linear-gradient(135deg, #ffe066, #ffc59e);">
+          <h3>🌟 Défi!</h3>
+          <p>${defi}</p>
+        </div>
+      `;
+    }
+
+    function uploadMedia() {
+      const file = document.getElementById("media-upload").files[0];
+      if (!file) return alert("Choisis un fichier!");
+      alert(`📤 ${file.name} serait uploadé!\n(Intégration Supabase nécessaire)`);
+    }
+
+    function revelerSecret() {
+      const code = document.getElementById("code-input").value.toUpperCase();
+      const secret = SECRETS[code];
+      let html = "";
+      if (secret) {
+        html = `
+          <div class="secret-box">
+            <h3>${secret.emoji} ${secret.msg}</h3>
+            <p>${code}</p>
+          </div>
+        `;
+      } else {
+        html = `<div class="empty"><div class="empty-emoji">🙈</div>Code incorrect, réessaie!</div>`;
+      }
+      document.getElementById("secret-result").innerHTML = html;
+    }
+
+    // Init
+    renderWeeklyPlanning();
+  </script>
+</body>
 </html>
