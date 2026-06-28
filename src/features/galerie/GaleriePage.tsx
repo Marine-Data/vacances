@@ -7,7 +7,6 @@ export default function GaleriePage() {
   const { user } = useAuth()
   const [photos, setPhotos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     loadPhotos()
@@ -19,32 +18,16 @@ export default function GaleriePage() {
     setLoading(false)
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!user || !e.target.files?.[0]) return
-    setUploading(true)
-
-    const file = e.target.files[0]
-    const path = `${user.id}/${Date.now()}_${file.name}`
-    const { error: uploadError } = await supabase.storage.from('photos').upload(path, file)
-
-    if (!uploadError) {
-      await supabase.from('photos').insert({ storage_path: path, uploaded_by: user.id })
-      await loadPhotos()
-    }
-    setUploading(false)
-  }
-
   if (loading) return <Loader />
 
   return (
     <Screen title="📸 Galerie">
-      <Card className="mb-4">
-        <h3 className="font-bold">Upload une photo</h3>
-        <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} className="mt-2" />
-      </Card>
+      <div className="mb-4">
+        <iframe src="https://widget.deezer.com/widget/light/playlist/1234567890" width="100%" height="100" frameBorder="0" allowTransparency allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+      </div>
 
       {photos.length === 0 ? (
-        <EmptyState emoji="📸" title="Aucune photo" />
+        <EmptyState emoji="📸" title="Aucune photo" hint="Viendront bientôt !" />
       ) : (
         <div className="grid grid-cols-2 gap-2">
           {photos.map(p => (

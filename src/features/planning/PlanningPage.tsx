@@ -19,7 +19,8 @@ export default function PlanningPage() {
 
   useEffect(() => {
     setFiltered(activities.filter(a => 
-      a.activite.toLowerCase().includes(search.toLowerCase())
+      a.activite.toLowerCase().includes(search.toLowerCase()) ||
+      a.jour.toLowerCase().includes(search.toLowerCase())
     ))
   }, [search, activities])
 
@@ -28,8 +29,8 @@ export default function PlanningPage() {
   if (!selected) {
     return (
       <Screen title="📅 Planning">
-        <Input placeholder="Cherche..." value={search} onChange={e => setSearch(e.target.value)} />
-        <div className="mt-4 space-y-2">
+        <Input placeholder="Cherche une activité..." value={search} onChange={e => setSearch(e.target.value)} className="mb-4" />
+        <div className="space-y-2">
           {filtered.length === 0 ? (
             <EmptyState emoji="🗓️" title="Aucune activité" />
           ) : (
@@ -52,6 +53,12 @@ export default function PlanningPage() {
         <h2 className="font-bold text-lg">{selected.activite}</h2>
         <p className="text-sm mt-2">{selected.jour} • {selected.horaires}</p>
         {selected.lieu_details && <p className="mt-2">📍 {selected.lieu_details}</p>}
+        {selected.inscription_requise && selected.lien_inscription && (
+          <a href={selected.lien_inscription} target="_blank" className="text-blue-600 underline mt-2">
+            🔗 S'inscrire
+          </a>
+        )}
+        {selected.regimes_allergies && <p className="text-xs mt-3">⚠️ {selected.regimes_allergies}</p>}
       </Card>
     </Screen>
   )

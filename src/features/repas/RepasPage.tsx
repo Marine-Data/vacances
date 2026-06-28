@@ -9,16 +9,10 @@ export default function RepasPage() {
 
   useEffect(() => {
     loadCourses()
-    const channel = supabase.channel('courses').on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'courses'
-    }, () => loadCourses()).subscribe()
-    return () => { void channel.unsubscribe() }
   }, [])
 
   async function loadCourses() {
-    const { data } = await supabase.from('courses').select('*')
+    const { data } = await supabase.from('courses').select('*').order('created_at')
     setCourses(data ?? [])
     setLoading(false)
   }
@@ -36,6 +30,11 @@ export default function RepasPage() {
     await loadCourses()
   }
 
+  async function deleteItem(id: string) {
+    await supabase.from('courses').delete().eq('id', id)
+    await loadCourses()
+  }
+
   if (loading) return <Loader />
 
   return (
@@ -50,9 +49,10 @@ export default function RepasPage() {
 
       <div className="space-y-2">
         {courses.map(c => (
-          <Card key={c.id} className="flex items-center gap-2">
+          <Card key={c.id} className="flex items-center gap-2 p-3">
             <input type="checkbox" checked={c.is_checked} onChange={() => toggleItem(c.id)} />
-            <span className={c.is_checked ? 'line-through opacity-50' : ''}>{c.libelle}</span>
+            <span className={c.is_checked ? 'line-through opacity-50 flex-1' : 'flex-1'}>{c.libelle}</span>
+            <button onClick={() => deleteItem(c.id)} className="text-red-500">✕</button>
           </Card>
         ))}
       </div>
